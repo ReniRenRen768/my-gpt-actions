@@ -13,6 +13,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Test endpoint
+app.get('/test', (req, res) => {
+    res.json({ message: 'Server is working!' });
+  });
+
 // Generate Architecture endpoint
 app.post('/generateArchitecture', (req, res) => {
   const { gptPurpose, targetUsers, coreFeatures, integrationNeeds } = req.body;
