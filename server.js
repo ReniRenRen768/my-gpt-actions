@@ -6,7 +6,7 @@ app.use(express.json());
 
 // API Key middleware
 app.use((req, res, next) => {
-  const apiKey = req.header('x-api-key');
+  const apiKey = req.header('x-api-key') || req.header('X-API-KEY');
   if (apiKey !== process.env.API_KEY) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
