@@ -6,7 +6,7 @@ app.use(express.json());
 
 // API Key middleware
 app.use((req, res, next) => {
-  const apiKey = req.header('x-api-key') || req.header('X-API-KEY');
+const apiKey = req.header('x-api-key') || req.header('X-API-KEY');
   if (apiKey !== process.env.API_KEY) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
@@ -84,6 +84,154 @@ app.post('/optimizePerformance', (req, res) => {
     }
   });
 });
+
+// GPT Architect Configuration endpoint
+app.post('/createGPTArchitect', (req, res) => {
+    const { name, description, coreFunctions, processSteps, responseGuidelines } = req.body;
+  
+    const gptArchitectConfig = {
+      configuration: {
+        name: "GPT Architect",
+        description: "Expert assistant for creating custom GPTs",
+        instructions: {
+          role: "You are GPT Architect, specializing in helping users create custom GPTs.",
+          coreFunctions: [
+            "Architecture framework development",
+            "System prompt engineering",
+            "Custom actions design",
+            "Implementation guidance",
+            "Testing and optimization support"
+          ],
+          processSteps: [
+            "Requirements gathering",
+            "Architecture design",
+            "Implementation planning",
+            "Testing setup",
+            "Optimization guidance"
+          ],
+          responseGuidelines: [
+            "Start with understanding requirements",
+            "Provide structured responses",
+            "Include specific examples",
+            "Offer clear guidance",
+            "Follow up on implementation"
+          ],
+          limitations: [
+            "No direct code execution",
+            "Platform restrictions apply",
+            "API limits consideration"
+          ]
+        },
+        conversationStarters: [
+          "I'll help you create a custom GPT. What's your main goal?",
+          "Let's design your GPT architecture. What functionality do you need?",
+          "Ready to optimize your GPT. What aspects need improvement?"
+        ]
+      }
+    };
+  
+    res.json(gptArchitectConfig);
+  });
+
+
+// Knowledge Base Structure endpoint
+app.post('/createKnowledgeBase', (req, res) => {
+    const { technical, functional, operational } = req.body;
+  
+    const knowledgeBase = {
+      knowledgeBase: {
+        domains: {
+          technical: {
+            apiDocumentation: technical?.apiDocumentation || [
+              "API endpoints documentation",
+              "Authentication methods",
+              "Request/response formats"
+            ],
+            implementationGuides: technical?.implementationGuides || [
+              "Setup procedures",
+              "Configuration steps",
+              "Integration guidelines"
+            ],
+            bestPractices: technical?.bestPractices || [
+              "Security measures",
+              "Performance optimization",
+              "Error handling"
+            ]
+          },
+          functional: {
+            useCase: functional?.useCase || [
+              "Common scenarios",
+              "Implementation examples",
+              "Use case patterns"
+            ],
+            features: functional?.features || [
+              "Core capabilities",
+              "Advanced features",
+              "Integration options"
+            ],
+            limitations: functional?.limitations || [
+              "Platform restrictions",
+              "API limits",
+              "Technical constraints"
+            ]
+          },
+          operational: {
+            maintenance: operational?.maintenance || [
+              "Regular updates",
+              "Monitoring procedures",
+              "Backup strategies"
+            ],
+            troubleshooting: operational?.troubleshooting || [
+              "Common issues",
+              "Debug procedures",
+              "Solution guides"
+            ],
+            optimization: operational?.optimization || [
+              "Performance tuning",
+              "Resource optimization",
+              "Scaling strategies"
+            ]
+          }
+        },
+        resources: {
+          templates: [
+            "Configuration templates",
+            "Implementation guides",
+            "Testing protocols"
+          ],
+          examples: [
+            "Code samples",
+            "Use case examples",
+            "Integration patterns"
+          ],
+          tutorials: [
+            "Getting started",
+            "Advanced implementation",
+            "Best practices"
+          ]
+        },
+        updates: {
+          changelog: [
+            "Version history",
+            "Feature updates",
+            "Bug fixes"
+          ],
+          versionNotes: [
+            "Release notes",
+            "Compatibility updates",
+            "Migration guides"
+          ],
+          improvements: [
+            "Performance enhancements",
+            "Feature additions",
+            "Security updates"
+          ]
+        }
+      }
+    };
+  
+    res.json(knowledgeBase);
+  });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
