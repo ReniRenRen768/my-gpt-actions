@@ -48,16 +48,186 @@ app.post('/createSystemPrompt', (req, res) => {
 
 // Design Custom Actions endpoint
 app.post('/designCustomActions', (req, res) => {
-  const { actionName, parameters, authentication, errorHandling } = req.body;
-  res.json({
-    actionSpecification: {
-      name: actionName,
-      parameters: parameters,
-      auth: authentication,
-      errorHandling: errorHandling
+    try {
+      const { actionName, parameters, authentication, errorHandling } = req.body;
+  
+      // Validate required inputs
+      if (!actionName || !parameters) {
+        return res.status(400).json({
+          error: "Missing required fields: 'actionName' and 'parameters' are required"
+        });
+      }
+  
+      // Create OpenAPI specification
+      const openAPISpec = {
+        openapi: "3.1.0",
+        paths: {
+          [`/${actionName}`]: {
+            post: {
+              summary: parameters.summary || "Custom action endpoint",
+              operationId: actionName,
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: parameters.properties || {},
+                      required: parameters.required || []
+                    }
+                  }
+                }
+              },
+              responses: {
+                "200": {
+                  description: "Successful response",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: parameters.responseProperties || {}
+                      }
+                    }
+                  }
+                },
+                "400": {
+                  description: "Bad request - missing or invalid parameters"
+                },
+                "401": {
+                  description: "Unauthorized - invalid API key"
+                },
+                "500": {
+                  description: "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        components: {
+          securitySchemes: {
+            ApiKeyAuth: {
+              type: "apiKey",
+              in: "header",
+              name: authentication?.headerName || "x-api-key"
+            }
+          }
+        }
+      };
+  
+      // Create dynamic endpoint
+      app.post(`/${actionName}`, async (req, res) => {
+        try {
+          // Validate required parameters
+          const requiredParams = parameters.required || [];
+          for (const param of requiredParams) {
+            if (!req.body[param]) {
+              return res.status(400).json({
+                error: `Missing required parameter: ${param}`,
+                required: requiredParams
+              });
+            }
+          }
+  
+          // Validate parameter types
+          for (const [key, value] of Object.entries(req.body)) {
+            const parameterSpec = parameters.properties[key];
+            if (parameterSpec) {
+              if (parameterSpec.type === "string" && typeof value !== "string") {
+                return res.status(400).json({
+                  error: `Invalid type for parameter '${key}': expected string`
+                });
+              }
+              if (parameterSpec.type === "number" && typeof value !== "number") {
+                return res.status(400).json({
+                  error: `Invalid type for parameter '${key}': expected number`
+                });
+              }
+              if (parameterSpec.enum && !parameterSpec.enum.includes(value)) {
+                return res.status(400).json({
+                  error: `Invalid value for parameter '${key}': must be one of ${parameterSpec.enum.join(", ")}`
+                });
+              }
+            }
+          }
+  
+          // Process the request
+          const response = {
+            success: true,
+            data: {
+              ...req.body,
+              processedAt: new Date().toISOString()
+            },
+            metadata: {
+              endpoint: actionName,
+              requestId: require('crypto').randomUUID()
+            }
+          };
+  
+          res.json(response);
+  
+        } catch (error) {
+          console.error(`Error in /${actionName}:`, error);
+          res.status(500).json({
+            error: "Internal server error",
+            message: error.message,
+            endpoint: actionName
+          });
+        }
+      });
+  
+      // Return the complete specification
+      res.json({
+        actionSpecification: {
+          customAction: {
+            openAPISpec: openAPISpec
+          },
+          apiEndpoint: {
+            endpoint: `/${actionName}`,
+            method: "POST",
+            parameters: parameters,
+            authentication: {
+              type: authentication?.type || "apiKey",
+              headerName: authentication?.headerName || "x-api-key"
+            },
+            errorHandling: {
+              strategies: errorHandling?.strategies || [
+                "Parameter validation",
+                "Type checking",
+                "Required fields validation",
+                "Error logging",
+                "Detailed error responses"
+              ]
+            }
+          },
+          usage: {
+            curl: `curl -X POST http://your-server/${actionName} \
+                   -H "Content-Type: application/json" \
+                   -H "x-api-key: your-api-key" \
+                   -d '${JSON.stringify({ example: "data" })}'`,
+            postman: {
+              method: "POST",
+              url: `http://your-server/${actionName}`,
+              headers: {
+                "Content-Type": "application/json",
+                "x-api-key": "your-api-key"
+              },
+              body: {
+                mode: "raw",
+                raw: JSON.stringify({ example: "data" })
+              }
+            }
+          }
+        }
+      });
+  
+    } catch (error) {
+      console.error("Error in /designCustomActions:", error);
+      res.status(500).json({
+        error: "Failed to design custom action",
+        message: error.message
+      });
     }
   });
-});
 
 // Troubleshoot API endpoint
 app.post('/troubleshootAPI', (req, res) => {
