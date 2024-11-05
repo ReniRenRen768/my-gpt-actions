@@ -403,6 +403,96 @@ app.post('/createKnowledgeBase', (req, res) => {
     res.json(knowledgeBase);
   });
 
+  // Unified GPT Architect endpoint
+app.post('/gptArchitect', (req, res) => {
+    try {
+      const { action, payload } = req.body;
+  
+      if (!action || !payload) {
+        return res.status(400).json({
+          error: "Missing required fields: 'action' and 'payload' are required"
+        });
+      }
+  
+      switch (action) {
+        case 'generateArchitecture':
+          const { gptPurpose, targetUsers, coreFeatures, integrationNeeds } = payload;
+          return res.json({
+            framework: {
+              systemComponents: {
+                purpose: gptPurpose,
+                users: targetUsers,
+                features: coreFeatures,
+                integrations: integrationNeeds
+              }
+            }
+          });
+  
+        case 'createSystemPrompt':
+          const { role, expertise, constraints, conversationStyle } = payload;
+          return res.json({
+            systemPrompt: {
+              role: role,
+              expertise: expertise,
+              constraints: constraints,
+              style: conversationStyle
+            }
+          });
+  
+        case 'designCustomActions':
+          const { actionName, parameters, authentication, errorHandling } = payload;
+          // Your existing designCustomActions logic
+          return res.json({
+            actionSpecification: {
+              // ... existing response structure
+            }
+          });
+  
+        case 'troubleshootAPI':
+          const { errorType, context, requestDetails } = payload;
+          return res.json({
+            troubleshooting: {
+              error: errorType,
+              context: context,
+              request: requestDetails,
+              suggestions: ['Check authentication', 'Verify parameters', 'Review logs']
+            }
+          });
+  
+        case 'optimizePerformance':
+          const { currentMetrics, bottlenecks, optimizationGoals } = payload;
+          return res.json({
+            optimization: {
+              current: currentMetrics,
+              bottlenecks: bottlenecks,
+              goals: optimizationGoals,
+              recommendations: ['Implement caching', 'Add rate limiting', 'Optimize queries']
+            }
+          });
+  
+        case 'createGPTArchitect':
+          // Your existing createGPTArchitect logic
+          return res.json(gptArchitectConfig);
+  
+        case 'createKnowledgeBase':
+          const { technical, functional, operational } = payload;
+          // Your existing createKnowledgeBase logic
+          return res.json(knowledgeBase);
+  
+        default:
+          return res.status(400).json({
+            error: `Invalid action: ${action}`
+          });
+      }
+    } catch (error) {
+      console.error("Error in /gptArchitect:", error);
+      res.status(500).json({
+        error: "Internal server error",
+        message: error.message
+      });
+    }
+  });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
